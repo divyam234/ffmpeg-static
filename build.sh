@@ -25,16 +25,16 @@ MYDIR="$(cd "$(dirname "$0")" && pwd)"  #"
 
 ####  Routines  ################################################
 
-Wget() { wget -cN "$@"; }
+Wget() { wget --no-check-certificate -cN "$@"; }
 
 Make() { make -j$(nproc); make "$@"; }
 
 Clone() {
+    git config --global http.sslVerify false
     local DIR="$(basename "$1" .git)"
 
     cd "$WORK_DIR/"
     test -d "$DIR/.git" || git clone --depth=1 "$@"
-
     cd "$DIR"
     git pull
 }
@@ -177,25 +177,24 @@ compileLibAss() {
 compileFfmpeg(){
     echo "Compiling ffmpeg"
     cd "$WORK_DIR/"
-    wget -O ffmpeg-snapshot.tar.bz2 https://ffmpeg.org/releases/ffmpeg-snapshot.tar.bz2 && 
-    tar xjvf ffmpeg-snapshot.tar.bz2 && 
-    cd ffmpeg
+    Wget -O fmpeg-4.4.1.tar.bz2 https://www.ffmpeg.org/releases/ffmpeg-4.4.1.tar.bz2 && 
+    tar xjvf fmpeg-4.4.1.tar.bz2 && 
+    cd ffmpeg-4.4.1
 
     export PATH="$CUDA_DIR/bin:$PATH"  # ..path to nvcc
-    PKG_CONFIG_PATH="$DEST_DIR/lib/pkgconfig:$DEST_DIR/lib64/pkgconfig" \
+    PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:$DEST_DIR/lib/pkgconfig:$DEST_DIR/lib64/pkgconfig" \
     ./configure \
       --pkg-config-flags="--static" \
       --prefix="$DEST_DIR" \
       --bindir="$DEST_DIR/bin" \
       --extra-cflags="-I $DEST_DIR/include -I $CUDA_DIR/include/" \
       --extra-ldflags="-L $DEST_DIR/lib -L $CUDA_DIR/lib64/" \
-      --extra-libs="-lpthread" \
+      --extra-libs="-lpthread -lm" \
       --extra-ldexeflags="-static" \
       --enable-cuda \
       --enable-cuda-sdk \
       --enable-cuda-nvcc \
       --enable-cuvid \
-      --enable-libnpp \
       --disable-shared \
       --enable-static \
       --enable-gpl \
@@ -203,9 +202,9 @@ compileFfmpeg(){
       --enable-libfreetype \
       --enable-libmp3lame \
       --enable-libopus \
-      --enable-libtheora \
       --enable-libvpx \
       --enable-libx264 \
+      --enable-libvorbis \
       --enable-nonfree \
       --enable-libaom \
       --enable-nvenc \
@@ -227,10 +226,12 @@ Make install
 compileNVEnc(){
 echo "Compiling NVEnc"
 cd "$WORK_DIR/"
-wget  -O "NVEnc-5.42.tar.gz" "https://github.com/rigaya/NVEnc/archive/refs/tags/5.42.tar.gz"
+Wget  -O "NVEnc-5.42.tar.gz" "https://github.com/rigaya/NVEnc/archive/refs/tags/5.42.tar.gz"
 tar -zxf "NVEnc-5.42.tar.gz"
 cd "NVEnc-5.42"
-sed -i '/avfilter_register_all()/c\ avfilter_init_dict(0,0)' ./configure
+git clone https://github.com/tplgy/cppcodec --depth=1 
+git clone https://github.com/rigaya/build_pkg --depth=1 
+sed -i 's/avfilter_register_all()/avfilter_init_dict(0,0)/g' ./configure
 
 ./configure --prefix="$DEST_DIR" --extra-cxxflags="-I $DEST_DIR/include -I $CUDA_DIR/include/" \
 --extra-ldflags="-L $DEST_DIR/lib -L $CUDA_DIR/lib64/"
@@ -238,23 +239,21 @@ Make install distclean
 
 }
 
-installLibs
-installNvidiaSDK
+#installLibs
+#installNvidiaSDK
 
-compileNasm
-compileYasm
-compileLibX264
+#compileNasm
+#compileYasm
+#compileLibX264
 #compileLibX265
-compileLibAom
-compileLibVpx
-compileLibfdkcc
-compileLibMP3Lame
-compileLibOpus
+#compileLibAom
+#compileLibVpx
+#compileLibfdkcc
+#compileLibMP3Lame
+#compileLibOpus
 #compileLibAss
-# TODO: libogg
-# TODO: libvorbis
-compileFfmpeg
-
+#compileFfmpeg
+compileNVEnc
 echo "Complete!"
 
 ## END ##
