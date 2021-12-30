@@ -1,0 +1,61 @@
+FROM ubuntu:impish
+
+USER root
+
+WORKDIR /root
+
+ENV TZ=Asia/Dubai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN apt update -qq
+RUN apt --no-install-recommends install -y tzdata
+# Basic packages needed to download dependencies and unpack them.
+
+RUN apt --no-install-recommends -y install nvidia-cuda-toolkit && rm -rf /var/lib/apt/lists/*
+
+RUN apt update -qq
+RUN apt --no-install-recommends -y install \
+  autoconf \
+  automake \
+  build-essential \
+  cmake \
+  git-core \
+  libass-dev \
+  libfreetype6-dev \
+  libgnutls28-dev \
+  libmp3lame-dev \
+  libsdl2-dev \
+  libtool \
+  libva-dev \
+  libvdpau-dev \
+  libvorbis-dev \
+  libxcb1-dev \
+  libxcb-shm0-dev \
+  libxcb-xfixes0-dev \
+  meson \
+  ninja-build \
+  pkg-config \
+  texinfo \
+  wget \
+  yasm \
+  zlib1g-dev \
+  libdevil-dev \
+  libunistring-dev \
+  libaom-dev \
+  libdav1d-dev \
+  && rm -rf /var/lib/apt/lists/*
+
+## Additional 
+RUN apt update -qq
+RUN apt --no-install-recommends -y install \
+    nasm \
+    libx264-dev \
+    libx265-dev libnuma-dev \
+    libvpx-dev \
+    libfdk-aac-dev \
+    libopus-dev \
+    libass-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt clean
+RUN apt autoremove
+CMD /bin/bash

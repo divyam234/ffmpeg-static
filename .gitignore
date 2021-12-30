@@ -3,4 +3,4 @@ target/
 *.swp
 bin/
 dl/
-ffmpeg_binaries
+ffmpeg_binaries/
